@@ -8,32 +8,23 @@ void AMyGameModeBase::OnPostLogin(AController* NewPlayer)
 {
 	Super::OnPostLogin(NewPlayer);
 
-	//AMyGameStateBase* MyGameStateBase = GetGameState<AMyGameStateBase>();
-	//if (IsValid(MyGameStateBase) == true)
-	//{
-	//	MyGameStateBase->MulticastRPCBroadcastLoginMessage(TEXT("XXXXXXX"));
-	//}
-
-	//AMyPlayerController* MyPlayerController = Cast<AMyPlayerController>(NewPlayer);
-	//if (IsValid(MyPlayerController) == true)
-	//{
-	//	AllPlayerControllers.Add(MyPlayerController);
-	//}
 	AMyPlayerController* MyPlayerController = Cast<AMyPlayerController>(NewPlayer);
 	if (IsValid(MyPlayerController) == true)
 	{
+		MyPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
+
 		AllPlayerControllers.Add(MyPlayerController);
 
-		AMyPlayerState* CXPS = MyPlayerController->GetPlayerState<AMyPlayerState>();
-		if (IsValid(CXPS) == true)
+		AMyPlayerState* MyPS = MyPlayerController->GetPlayerState<AMyPlayerState>();
+		if (IsValid(MyPS) == true)
 		{
-			CXPS->PlayerNameString = TEXT("Player") + FString::FromInt(AllPlayerControllers.Num());
+			MyPS->PlayerNameString = TEXT("Player") + FString::FromInt(AllPlayerControllers.Num());
 		}
 
 		AMyGameStateBase* MyGameStateBase = GetGameState<AMyGameStateBase>();
 		if (IsValid(MyGameStateBase) == true)
 		{
-			MyGameStateBase->MulticastRPCBroadcastLoginMessage(CXPS->PlayerNameString);
+			MyGameStateBase->MulticastRPCBroadcastLoginMessage(MyPS->PlayerNameString);
 		}
 	}
 }
@@ -148,6 +139,9 @@ void AMyGameModeBase::PrintChatMessageString(AMyPlayerController* InChattingPlay
 			{
 				FString CombinedMessageString = InChatMessageString + TEXT(" -> ") + JudgeResultString;
 				MyPlayerController->ClientRPCPrintChatMessageString(CombinedMessageString);
+
+				int32 StrikeCount = FCString::Atoi(*JudgeResultString.Left(1));
+				JudgeGame(InChattingPlayerController, StrikeCount);
 			}
 		}
 	}
@@ -170,5 +164,63 @@ void AMyGameModeBase::IncreaseGuessCount(AMyPlayerController* InChattingPlayerCo
 	if (IsValid(MyPS) == true)
 	{
 		MyPS->CurrentGuessCount++;
+	}
+}
+
+void AMyGameModeBase::ResetGame()
+{
+	SecretNumberString = GenerateSecretNumber();
+
+	for (const auto& CXPlayerController : AllPlayerControllers)
+	{
+		AMyPlayerState* MyPS = CXPlayerController->GetPlayerState<AMyPlayerState>();
+		if (IsValid(MyPS) == true)
+		{
+			MyPS->CurrentGuessCount = 0;
+		}
+	}
+}
+
+void AMyGameModeBase::JudgeGame(AMyPlayerController* InChattingPlayerController, int InStrikeCount)
+{
+	if (3 == InStrikeCount)
+	{
+		AMyPlayerState* MyPS = InChattingPlayerController->GetPlayerState<AMyPlayerState>();
+		for (const auto& CXPlayerController : AllPlayerControllers)
+		{
+			if (IsValid(MyPS) == true)
+			{
+				FString CombinedMessageString = MyPS->PlayerNameString + TEXT(" has won the game.");
+				CXPlayerController->NotificationText = FText::FromString(CombinedMessageString);
+
+				ResetGame();
+			}
+		}
+	}
+	else
+	{
+		bool bIsDraw = true;
+		for (const auto& CXPlayerController : AllPlayerControllers)
+		{
+			AMyPlayerState* MyPS = CXPlayerController->GetPlayerState<AMyPlayerState>();
+			if (IsValid(MyPS) == true)
+			{
+				if (MyPS->CurrentGuessCount < MyPS->MaxGuessCount)
+				{
+					bIsDraw = false;
+					break;
+				}
+			}
+		}
+
+		if (true == bIsDraw)
+		{
+			for (const auto& CXPlayerController : AllPlayerControllers)
+			{
+				CXPlayerController->NotificationText = FText::FromString(TEXT("Draw..."));
+
+				ResetGame();
+			}
+		}
 	}
 }

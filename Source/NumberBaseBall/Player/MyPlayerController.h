@@ -5,6 +5,7 @@
 #include "MyPlayerController.generated.h"
 
 class UMyChatInput;
+class UUserWidget;
 
 UCLASS()
 class NUMBERBASEBALL_API AMyPlayerController : public APlayerController
@@ -12,6 +13,8 @@ class NUMBERBASEBALL_API AMyPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	AMyPlayerController();
+
 	virtual void BeginPlay() override;
 
 	void SetChatMessageString(const FString& InChatMessageString);
@@ -23,6 +26,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMyChatInput> ChatInputWidgetClass;
@@ -31,4 +37,14 @@ protected:
 	TObjectPtr< UMyChatInput> ChatInputWidgetInstance;
 	
 	FString ChatMessageString;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> NotificationTextWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> NotificationTextWidgetInstance;
+
+public:
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FText NotificationText;
 };

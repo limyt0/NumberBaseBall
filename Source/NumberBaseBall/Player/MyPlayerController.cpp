@@ -5,6 +5,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/MyGameModeBase.h"
 #include "MyPlayerState.h"
+#include "Net/UnrealNetwork.h"
+
+
+AMyPlayerController::AMyPlayerController()
+{
+	bReplicates = true;
+}
 
 void AMyPlayerController::BeginPlay()
 {
@@ -24,6 +31,14 @@ void AMyPlayerController::BeginPlay()
 		if (IsValid(ChatInputWidgetInstance) == true)
 		{
 			ChatInputWidgetInstance->AddToViewport();
+		}
+	}
+	if (IsValid(NotificationTextWidgetClass) == true)
+	{
+		NotificationTextWidgetInstance = CreateWidget<UUserWidget>(this, NotificationTextWidgetClass);
+		if (IsValid(NotificationTextWidgetInstance) == true)
+		{
+			NotificationTextWidgetInstance->AddToViewport();
 		}
 	}
 }
@@ -51,6 +66,13 @@ void AMyPlayerController::SetChatMessageString(const FString& InChatMessageStrin
 void AMyPlayerController::PrintChatMessageString(const FString& InChatMessageString)
 {
 	UKismetSystemLibrary::PrintString(this, ChatMessageString, true, true, FLinearColor::Red, 5.0f);
+}
+
+void AMyPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, NotificationText);
 }
 
 void AMyPlayerController::ClientRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
