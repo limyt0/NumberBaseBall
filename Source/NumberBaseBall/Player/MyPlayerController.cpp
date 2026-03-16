@@ -6,7 +6,7 @@
 #include "Game/MyGameModeBase.h"
 #include "MyPlayerState.h"
 #include "Net/UnrealNetwork.h"
-
+#include "NumberBaseBall.h"
 
 AMyPlayerController::AMyPlayerController()
 {
@@ -65,7 +65,8 @@ void AMyPlayerController::SetChatMessageString(const FString& InChatMessageStrin
 
 void AMyPlayerController::PrintChatMessageString(const FString& InChatMessageString)
 {
-	UKismetSystemLibrary::PrintString(this, ChatMessageString, true, true, FLinearColor::Red, 5.0f);
+	//UKismetSystemLibrary::PrintString(this, ChatMessageString, true, true, FLinearColor::Red, 5.0f);
+	BaseChatFunctionLibrary::MyPrintString(this, InChatMessageString, 10.f);
 }
 
 void AMyPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -94,6 +95,7 @@ void AMyPlayerController::ServerRPCPrintChatMessageString_Implementation(const F
 	AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
 	if (IsValid(GM) == true)
 	{
+
 		AMyGameModeBase* MyGM = Cast<AMyGameModeBase>(GM);
 		if (IsValid(MyGM) == true)
 		{

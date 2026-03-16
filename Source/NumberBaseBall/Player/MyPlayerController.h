@@ -24,8 +24,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientRPCPrintChatMessageString(const FString& InChatMessageString);
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Server, Reliable)
 	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
+
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
