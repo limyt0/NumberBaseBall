@@ -15,8 +15,14 @@ public class NumberBaseBall : ModuleRules
 
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        PrivateDependencyModuleNames.AddRange(new string[] { 
+             // UI
+			"UMG", "Slate", "SlateCore",
+        });
 
-        PublicIncludePaths.AddRange(new string[] { "NumberBaseBall" });
+        PublicIncludePaths.AddRange(new string[] { 
+            "NumberBaseBall",
+           
+        });
     }
 }
