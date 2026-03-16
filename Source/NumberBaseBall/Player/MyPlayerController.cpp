@@ -2,7 +2,9 @@
 #include "UI/MyChatInput.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
-
+#include "Kismet/GameplayStatics.h"
+#include "Game/MyGameModeBase.h"
+#include "MyPlayerState.h"
 
 void AMyPlayerController::BeginPlay()
 {
@@ -30,10 +32,19 @@ void AMyPlayerController::SetChatMessageString(const FString& InChatMessageStrin
 {
 	ChatMessageString = InChatMessageString;
 
-	//PrintChatMessageString(InChatMessageString);
 	if (IsLocalController() == true)
 	{
-		ServerRPCPrintChatMessageString(InChatMessageString);
+		// ServerRPCPrintChatMessageString(InChatMessageString);
+
+		AMyPlayerState* MyPS = GetPlayerState<AMyPlayerState>();
+		if (IsValid(MyPS) == true)
+		{
+			//FString CombinedMessageString = MyPS->PlayerNameString + TEXT(": ") + InChatMessageString;
+			FString CombinedMessageString = MyPS->GetPlayerInfoString() + TEXT(": ") + InChatMessageString;
+
+
+			ServerRPCPrintChatMessageString(CombinedMessageString);
+		}
 	}
 }
 
@@ -49,12 +60,22 @@ void AMyPlayerController::ClientRPCPrintChatMessageString_Implementation(const F
 
 void AMyPlayerController::ServerRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
 {
-	for (TActorIterator<AMyPlayerController> It(GetWorld()); It; ++It)
+	//for (TActorIterator<AMyPlayerController> It(GetWorld()); It; ++It)
+	//{
+	//	AMyPlayerController* MyPlayerController = *It;
+	//	if (IsValid(MyPlayerController) == true)
+	//	{
+	//		MyPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+	//	}
+	//}
+
+	AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
+	if (IsValid(GM) == true)
 	{
-		AMyPlayerController* MyPlayerController = *It;
-		if (IsValid(MyPlayerController) == true)
+		AMyGameModeBase* MyGM = Cast<AMyGameModeBase>(GM);
+		if (IsValid(MyGM) == true)
 		{
-			MyPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+			MyGM->PrintChatMessageString(this, InChatMessageString);
 		}
 	}
 }
